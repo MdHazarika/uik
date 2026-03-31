@@ -1,0 +1,1893 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: BarbrGo - Barber Booking Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: barbers
+    description: Barber management
+  - name: shops
+    description: Barber shops
+  - name: services
+    description: Services offered
+  - name: bookings
+    description: Booking management
+  - name: reviews
+    description: Reviews and ratings
+  - name: offers
+    description: Offers and coupons
+  - name: admin
+    description: Admin panel
+  - name: dashboard
+    description: Dashboard summaries
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # Users
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/bookings:
+    get:
+      operationId: getUserBookings
+      tags: [users]
+      summary: Get user bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+      responses:
+        "200":
+          description: User bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  # Barbers
+  /barbers:
+    get:
+      operationId: getBarbers
+      tags: [barbers]
+      summary: List barbers with filters
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: minExperience
+          in: query
+          schema:
+            type: integer
+        - name: homeService
+          in: query
+          schema:
+            type: boolean
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [rating, price, experience, distance]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of barbers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BarberListResponse"
+    post:
+      operationId: createBarber
+      tags: [barbers]
+      summary: Create barber profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBarberRequest"
+      responses:
+        "201":
+          description: Barber created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Barber"
+
+  /barbers/top-rated:
+    get:
+      operationId: getTopRatedBarbers
+      tags: [barbers]
+      summary: Get top-rated barbers
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Top rated barbers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Barber"
+
+  /barbers/{id}:
+    get:
+      operationId: getBarber
+      tags: [barbers]
+      summary: Get barber by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Barber profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BarberDetail"
+    put:
+      operationId: updateBarber
+      tags: [barbers]
+      summary: Update barber profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBarberRequest"
+      responses:
+        "200":
+          description: Updated barber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Barber"
+
+  /barbers/{id}/availability:
+    get:
+      operationId: getBarberAvailability
+      tags: [barbers]
+      summary: Get barber availability for a date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: serviceIds
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available time slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResponse"
+
+  /barbers/{id}/bookings:
+    get:
+      operationId: getBarberBookings
+      tags: [barbers]
+      summary: Get barber bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Barber bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  /barbers/{id}/reviews:
+    get:
+      operationId: getBarberReviews
+      tags: [barbers]
+      summary: Get barber reviews
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Barber reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /barbers/{id}/services:
+    get:
+      operationId: getBarberServices
+      tags: [barbers]
+      summary: Get barber services
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Barber services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /barbers/{id}/dashboard:
+    get:
+      operationId: getBarberDashboard
+      tags: [barbers]
+      summary: Get barber dashboard summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BarberDashboard"
+
+  /barbers/{id}/earnings:
+    get:
+      operationId: getBarberEarnings
+      tags: [barbers]
+      summary: Get barber earnings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+      responses:
+        "200":
+          description: Earnings data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EarningsResponse"
+
+  # Shops
+  /shops:
+    get:
+      operationId: getShops
+      tags: [shops]
+      summary: List shops
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of shops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Shop"
+    post:
+      operationId: createShop
+      tags: [shops]
+      summary: Create a barber shop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShopRequest"
+      responses:
+        "201":
+          description: Shop created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+
+  /shops/{id}:
+    get:
+      operationId: getShop
+      tags: [shops]
+      summary: Get shop by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Shop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShopDetail"
+
+  # Services
+  /services:
+    get:
+      operationId: getServices
+      tags: [services]
+      summary: List all service types
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceType"
+
+  /barbers/{barberId}/services:
+    post:
+      operationId: addBarberService
+      tags: [services]
+      summary: Add service to barber
+      parameters:
+        - name: barberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceRequest"
+      responses:
+        "201":
+          description: Service added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /barbers/{barberId}/services/{serviceId}:
+    put:
+      operationId: updateBarberService
+      tags: [services]
+      summary: Update barber service
+      parameters:
+        - name: barberId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServiceRequest"
+      responses:
+        "200":
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteBarberService
+      tags: [services]
+      summary: Delete barber service
+      parameters:
+        - name: barberId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # Bookings
+  /bookings:
+    get:
+      operationId: getBookings
+      tags: [bookings]
+      summary: List all bookings (admin)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    put:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingRequest"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/cancel:
+    post:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelBookingRequest"
+      responses:
+        "200":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # Reviews
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Create a review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/{id}:
+    delete:
+      operationId: deleteReview
+      tags: [reviews]
+      summary: Delete review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # Offers
+  /offers:
+    get:
+      operationId: getOffers
+      tags: [offers]
+      summary: Get active offers
+      responses:
+        "200":
+          description: Active offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+    post:
+      operationId: createOffer
+      tags: [offers]
+      summary: Create an offer (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOfferRequest"
+      responses:
+        "201":
+          description: Offer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+
+  /offers/validate:
+    post:
+      operationId: validateCoupon
+      tags: [offers]
+      summary: Validate a coupon code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateCouponRequest"
+      responses:
+        "200":
+          description: Coupon validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CouponValidationResponse"
+
+  # Admin
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get platform stats
+      responses:
+        "200":
+          description: Platform statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/users:
+    get:
+      operationId: getAdminUsers
+      tags: [admin]
+      summary: Get all users (admin)
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [customer, barber, admin]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUsersResponse"
+
+  /admin/bookings:
+    get:
+      operationId: getAdminBookings
+      tags: [admin]
+      summary: Get all bookings (admin)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: All bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBookingsResponse"
+
+  /admin/revenue:
+    get:
+      operationId: getAdminRevenue
+      tags: [admin]
+      summary: Get revenue analytics
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+      responses:
+        "200":
+          description: Revenue analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueAnalytics"
+
+  # Platform summary dashboard
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Platform summary
+      responses:
+        "200":
+          description: Dashboard summary with popular barbers, recent bookings, top cities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/cities:
+    get:
+      operationId: getCities
+      tags: [dashboard]
+      summary: Get available cities
+      responses:
+        "200":
+          description: Cities list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CityInfo"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # Auth
+    RegisterUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [customer, barber]
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        avatar:
+          type: string
+        loyaltyPoints:
+          type: integer
+
+    # Users
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [customer, barber, admin]
+        avatar:
+          type: string
+        loyaltyPoints:
+          type: integer
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+        - loyaltyPoints
+        - isVerified
+        - createdAt
+
+    # Barbers
+    CreateBarberRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+        shopId:
+          type: integer
+        experience:
+          type: integer
+        bio:
+          type: string
+        city:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        homeService:
+          type: boolean
+        homeServiceCharge:
+          type: number
+        workingHoursStart:
+          type: string
+        workingHoursEnd:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        portfolioImages:
+          type: array
+          items:
+            type: string
+      required:
+        - userId
+        - experience
+        - city
+        - area
+
+    UpdateBarberRequest:
+      type: object
+      properties:
+        experience:
+          type: integer
+        bio:
+          type: string
+        city:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        homeService:
+          type: boolean
+        homeServiceCharge:
+          type: number
+        workingHoursStart:
+          type: string
+        workingHoursEnd:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        portfolioImages:
+          type: array
+          items:
+            type: string
+        isAvailable:
+          type: boolean
+
+    Barber:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        shopId:
+          type: integer
+        name:
+          type: string
+        avatar:
+          type: string
+        experience:
+          type: integer
+        bio:
+          type: string
+        city:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        homeService:
+          type: boolean
+        homeServiceCharge:
+          type: number
+        workingHoursStart:
+          type: string
+        workingHoursEnd:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        portfolioImages:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+        totalReviews:
+          type: integer
+        totalBookings:
+          type: integer
+        isAvailable:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - name
+        - experience
+        - city
+        - area
+        - homeService
+        - rating
+        - totalReviews
+        - totalBookings
+        - isAvailable
+        - createdAt
+
+    BarberDetail:
+      allOf:
+        - $ref: "#/components/schemas/Barber"
+        - type: object
+          properties:
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/Service"
+            recentReviews:
+              type: array
+              items:
+                $ref: "#/components/schemas/Review"
+            shopName:
+              type: string
+
+    BarberListResponse:
+      type: object
+      properties:
+        barbers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Barber"
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+      required:
+        - barbers
+        - total
+        - hasMore
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        date:
+          type: string
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlot"
+        nextAvailable:
+          type: string
+      required:
+        - date
+        - slots
+
+    TimeSlot:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        available:
+          type: boolean
+      required:
+        - startTime
+        - endTime
+        - available
+
+    BarberDashboard:
+      type: object
+      properties:
+        totalBookings:
+          type: integer
+        todayBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+        completedBookings:
+          type: integer
+        totalEarnings:
+          type: number
+        todayEarnings:
+          type: number
+        averageRating:
+          type: number
+        totalReviews:
+          type: integer
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+      required:
+        - totalBookings
+        - todayBookings
+        - pendingBookings
+        - completedBookings
+        - totalEarnings
+        - todayEarnings
+        - averageRating
+        - totalReviews
+        - recentBookings
+
+    EarningsResponse:
+      type: object
+      properties:
+        total:
+          type: number
+        period:
+          type: string
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              amount:
+                type: number
+            required:
+              - label
+              - amount
+      required:
+        - total
+        - period
+        - breakdown
+
+    # Shops
+    CreateShopRequest:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        city:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        openTime:
+          type: string
+        closeTime:
+          type: string
+      required:
+        - ownerId
+        - name
+        - city
+        - area
+
+    Shop:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        city:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        openTime:
+          type: string
+        closeTime:
+          type: string
+        rating:
+          type: number
+        totalBarbers:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ownerId
+        - name
+        - city
+        - area
+        - rating
+        - totalBarbers
+        - createdAt
+
+    ShopDetail:
+      allOf:
+        - $ref: "#/components/schemas/Shop"
+        - type: object
+          properties:
+            barbers:
+              type: array
+              items:
+                $ref: "#/components/schemas/Barber"
+
+    # Services
+    ServiceType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        defaultDurationMinutes:
+          type: integer
+      required:
+        - id
+        - name
+        - defaultDurationMinutes
+
+    CreateServiceRequest:
+      type: object
+      properties:
+        serviceTypeId:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        description:
+          type: string
+      required:
+        - name
+        - price
+        - durationMinutes
+
+    UpdateServiceRequest:
+      type: object
+      properties:
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        description:
+          type: string
+        isActive:
+          type: boolean
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        barberId:
+          type: integer
+        serviceTypeId:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        description:
+          type: string
+        isActive:
+          type: boolean
+      required:
+        - id
+        - barberId
+        - name
+        - price
+        - durationMinutes
+        - isActive
+
+    # Bookings
+    CreateBookingRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+        barberId:
+          type: integer
+        serviceIds:
+          type: array
+          items:
+            type: integer
+        date:
+          type: string
+        startTime:
+          type: string
+        isHomeService:
+          type: boolean
+        address:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [online, cash]
+        couponCode:
+          type: string
+        notes:
+          type: string
+      required:
+        - userId
+        - barberId
+        - serviceIds
+        - date
+        - startTime
+        - paymentMethod
+
+    UpdateBookingRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+
+    CancelBookingRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        barberId:
+          type: integer
+        barberName:
+          type: string
+        barberAvatar:
+          type: string
+        userName:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        date:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        totalDuration:
+          type: integer
+        totalAmount:
+          type: number
+        discountAmount:
+          type: number
+        finalAmount:
+          type: number
+        isHomeService:
+          type: boolean
+        address:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [online, cash]
+        paymentStatus:
+          type: string
+          enum: [pending, paid, refunded]
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        couponCode:
+          type: string
+        notes:
+          type: string
+        cancelReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - barberId
+        - barberName
+        - userName
+        - services
+        - date
+        - startTime
+        - endTime
+        - totalDuration
+        - totalAmount
+        - discountAmount
+        - finalAmount
+        - isHomeService
+        - paymentMethod
+        - paymentStatus
+        - status
+        - createdAt
+
+    # Reviews
+    CreateReviewRequest:
+      type: object
+      properties:
+        bookingId:
+          type: integer
+        barberId:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required:
+        - bookingId
+        - barberId
+        - rating
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookingId:
+          type: integer
+        barberId:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        userAvatar:
+          type: string
+        rating:
+          type: integer
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - barberId
+        - userId
+        - userName
+        - rating
+        - createdAt
+
+    # Offers
+    CreateOfferRequest:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        discountType:
+          type: string
+          enum: [percentage, fixed]
+        discountValue:
+          type: number
+        minBookingAmount:
+          type: number
+        maxDiscount:
+          type: number
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        maxUsage:
+          type: integer
+        isFirstTimeOnly:
+          type: boolean
+      required:
+        - code
+        - description
+        - discountType
+        - discountValue
+
+    Offer:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        discountType:
+          type: string
+          enum: [percentage, fixed]
+        discountValue:
+          type: number
+        minBookingAmount:
+          type: number
+        maxDiscount:
+          type: number
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        maxUsage:
+          type: integer
+        currentUsage:
+          type: integer
+        isFirstTimeOnly:
+          type: boolean
+        isActive:
+          type: boolean
+      required:
+        - id
+        - code
+        - description
+        - discountType
+        - discountValue
+        - isActive
+
+    ValidateCouponRequest:
+      type: object
+      properties:
+        code:
+          type: string
+        userId:
+          type: integer
+        amount:
+          type: number
+      required:
+        - code
+        - userId
+        - amount
+
+    CouponValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        discountAmount:
+          type: number
+        message:
+          type: string
+      required:
+        - valid
+        - message
+
+    # Admin
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalBarbers:
+          type: integer
+        totalShops:
+          type: integer
+        totalBookings:
+          type: integer
+        completedBookings:
+          type: integer
+        cancelledBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        monthlyRevenue:
+          type: number
+        activeOffers:
+          type: integer
+        todayBookings:
+          type: integer
+        growthRate:
+          type: number
+      required:
+        - totalUsers
+        - totalBarbers
+        - totalShops
+        - totalBookings
+        - completedBookings
+        - cancelledBookings
+        - totalRevenue
+        - monthlyRevenue
+        - activeOffers
+        - todayBookings
+        - growthRate
+
+    AdminUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+      required:
+        - users
+        - total
+
+    AdminBookingsResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+      required:
+        - bookings
+        - total
+
+    RevenueAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+        total:
+          type: number
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              revenue:
+                type: number
+              bookings:
+                type: integer
+            required:
+              - label
+              - revenue
+              - bookings
+      required:
+        - period
+        - total
+        - breakdown
+
+    # Dashboard
+    DashboardSummary:
+      type: object
+      properties:
+        featuredBarbers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Barber"
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        activeOffers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Offer"
+        topCities:
+          type: array
+          items:
+            $ref: "#/components/schemas/CityInfo"
+        stats:
+          type: object
+          properties:
+            totalBarbers:
+              type: integer
+            totalBookingsToday:
+              type: integer
+            averageRating:
+              type: number
+          required:
+            - totalBarbers
+            - totalBookingsToday
+            - averageRating
+      required:
+        - featuredBarbers
+        - recentBookings
+        - activeOffers
+        - topCities
+        - stats
+
+    CityInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        totalBarbers:
+          type: integer
+        areas:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - totalBarbers
+        - areas
